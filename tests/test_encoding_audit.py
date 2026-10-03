@@ -21,7 +21,9 @@ class EncodingAudit(unittest.TestCase):
   self.commit('caf\u00e9')
   subprocess.run(['git','-C',str(self.root),'config','i18n.logOutputEncoding','ISO-8859-1'],check=True)
   try: result=self.runtime.git_log({})
-  except UnicodeError:return # An explicit error is preferable to fabricated success.
+  except UnicodeError:
+   if os.environ.get('AUDIT_VARIANT')=='candidate':raise
+   return # An explicit baseline error is preferable to fabricated success.
   self.assertEqual(result['commits'][0]['subject'],'caf\u00e9')
  @unittest.skipIf(os.name=='nt','POSIX byte filenames only')
  def test_ignored_byte_filename_is_not_silently_unignored(self):
@@ -29,7 +31,9 @@ class EncodingAudit(unittest.TestCase):
   (self.root/'.gitignore').write_bytes(b'ignored-\xff.txt\n')
   os.close(os.open(os.fsencode(self.root)+b'/ignored-\xff.txt',os.O_CREAT|os.O_WRONLY,0o600))
   try: ignored=Workspace(self.root).git_ignored_paths([name])
-  except UnicodeError:return
+  except UnicodeError:
+   if os.environ.get('AUDIT_VARIANT')=='candidate':raise
+   return
   self.assertIn(name,ignored)
  def test_utf8_git_log_is_correct_under_selected_locale(self):
   self.commit('\u4e2d\u6587 \u6587\u4ef6 caf\u00e9')

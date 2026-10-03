@@ -14,42 +14,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: baseline
+          - variant: candidate
             os: ubuntu-latest
             locale: C.UTF-8
             repository: connbot/coding-tools-mcp
-            revision: 91f60e2604d3b3aa69e675d1b1fce06aa4a116b8
-          - variant: baseline
+            revision: audit/pr85-encoding-20261003
+          - variant: candidate
             os: windows-latest
             locale: Chinese_China.936
-            default_encoding: cp936
             repository: connbot/coding-tools-mcp
-            revision: 91f60e2604d3b3aa69e675d1b1fce06aa4a116b8
-          - variant: baseline
+            revision: audit/pr85-encoding-20261003
+            default_encoding: cp936
+          - variant: candidate
             os: windows-latest
             locale: English_United States.1252
             repository: connbot/coding-tools-mcp
-            revision: 91f60e2604d3b3aa69e675d1b1fce06aa4a116b8
-          - variant: pr85
-            os: ubuntu-latest
-            locale: C.UTF-8
-            repository: KetenBieber/coding-tools-mcp
-            revision: 3320a5608d17f2eea8dbf3038801a8cc8a6eec15
-          - variant: pr85
-            os: windows-latest
-            locale: Chinese_China.936
-            default_encoding: cp936
-            repository: KetenBieber/coding-tools-mcp
-            revision: 3320a5608d17f2eea8dbf3038801a8cc8a6eec15
-          - variant: pr85
-            os: windows-latest
-            locale: English_United States.1252
-            repository: KetenBieber/coding-tools-mcp
-            revision: 3320a5608d17f2eea8dbf3038801a8cc8a6eec15
+            revision: audit/pr85-encoding-20261003
     env:
       CODING_TOOLS_MCP_TELEMETRY: 'off'
       PYTHONIOENCODING: utf-8
       AUDIT_RUNTIME: subject
+      AUDIT_VARIANT: ${{ matrix.variant }}
       AUDIT_LOCALE: ${{ matrix.locale }}
       AUDIT_DEFAULT_ENCODING: ${{ matrix.default_encoding }}
     steps:

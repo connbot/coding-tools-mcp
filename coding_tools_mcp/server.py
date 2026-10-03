@@ -1448,8 +1448,8 @@ class Workspace:
         try:
             completed = subprocess.run(
                 [git, "-C", str(self.root), "check-ignore", "--stdin", "-z"],
-                input="\0".join(rel_paths) + "\0",
-                text=True,
+                input=b"\0".join(os.fsencode(path) for path in rel_paths) + b"\0",
+                text=False,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 timeout=2,
@@ -1458,7 +1458,7 @@ class Workspace:
             return set()
         if completed.returncode not in {0, 1}:
             return set()
-        return {path for path in completed.stdout.split("\0") if path}
+        return {os.fsdecode(path) for path in completed.stdout.split(b"\0") if path}
 
 
 class WorkspaceCommandManager:
@@ -2816,6 +2816,8 @@ class Runtime:
                     args,
                     cwd=str(resolved.path),
                     text=True,
+                    encoding="utf-8",
+                    errors="strict",
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     timeout=10,
@@ -2989,6 +2991,8 @@ class Runtime:
                 args,
                 cwd=str(self.workspace.root),
                 text=True,
+                encoding="utf-8",
+                errors="strict",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
             )
@@ -3933,8 +3937,10 @@ class Runtime:
         self, cmd: list[str], *, timeout: int | None = None, env: dict[str, str] | None = None
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            cmd,
+            [cmd[0], "-c", "i18n.logOutputEncoding=UTF-8", *cmd[1:]],
             text=True,
+            encoding="utf-8",
+            errors="strict",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout,
