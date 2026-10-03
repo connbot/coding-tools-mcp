@@ -22,6 +22,7 @@ jobs:
           - variant: baseline
             os: windows-latest
             locale: Chinese_China.936
+            default_encoding: cp936
             repository: connbot/coding-tools-mcp
             revision: 91f60e2604d3b3aa69e675d1b1fce06aa4a116b8
           - variant: baseline
@@ -37,6 +38,7 @@ jobs:
           - variant: pr85
             os: windows-latest
             locale: Chinese_China.936
+            default_encoding: cp936
             repository: KetenBieber/coding-tools-mcp
             revision: 3320a5608d17f2eea8dbf3038801a8cc8a6eec15
           - variant: pr85
@@ -49,6 +51,7 @@ jobs:
       PYTHONIOENCODING: utf-8
       AUDIT_RUNTIME: subject
       AUDIT_LOCALE: ${{ matrix.locale }}
+      AUDIT_DEFAULT_ENCODING: ${{ matrix.default_encoding }}
     steps:
       - uses: actions/checkout@v6.0.2
         with:

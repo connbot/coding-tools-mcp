@@ -1,6 +1,7 @@
 """Real subprocess byte-boundary probes for baseline and PR85; no credentials needed."""
 from __future__ import annotations
-import json,locale,os,shutil,subprocess,sys,tempfile,unittest
+import codecs,json,locale,os,shutil,subprocess,sys,tempfile,unittest
+from unittest.mock import patch
 from pathlib import Path
 sys.path.insert(0, str(Path(os.environ.get('AUDIT_RUNTIME', '.')).resolve()))
 from coding_tools_mcp.server import Runtime,Workspace
@@ -64,7 +65,16 @@ if __name__=='__main__':
  selected=os.environ.get('AUDIT_LOCALE')
  if selected:
   locale.setlocale(locale.LC_CTYPE,selected)
- print(json.dumps({'platform':sys.platform,'ctype':locale.setlocale(locale.LC_CTYPE),'encoding':locale.getencoding(),'utf8_mode':sys.flags.utf8_mode,'git':shutil.which('git'),'fd':shutil.which('fd') or shutil.which('fdfind'),'rg':shutil.which('rg')},ensure_ascii=True),flush=True)
- if selected and '936' in selected:
-  assert locale.getencoding().lower() in ('cp936','gbk'),locale.getencoding()
+ native_encoding=locale.getencoding()
+ injected=os.environ.get('AUDIT_DEFAULT_ENCODING')
+ if injected:
+  # Windows hosted runners retain system ACP1252 even after setlocale.
+  # Inject only Python's default pipe encoding, then verify the actual wrapper.
+  patch('subprocess._text_encoding',return_value=injected).start()
+ with subprocess.Popen([sys.executable,'-c','pass'],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE) as probe:
+  actual_pipe_encoding=probe.stdout.encoding
+  probe.communicate()
+ if injected:
+  assert codecs.lookup(actual_pipe_encoding).name==codecs.lookup(injected).name
+ print(json.dumps({'platform':sys.platform,'ctype':locale.setlocale(locale.LC_CTYPE),'native_encoding':native_encoding,'actual_pipe_encoding':actual_pipe_encoding,'injected_default':injected,'utf8_mode':sys.flags.utf8_mode,'git':shutil.which('git'),'fd':shutil.which('fd') or shutil.which('fdfind'),'rg':shutil.which('rg')},ensure_ascii=True),flush=True)
  unittest.main(verbosity=2)
